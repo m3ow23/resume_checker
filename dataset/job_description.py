@@ -1,11 +1,8 @@
-job_brief = [
+job_description_list = [[
     "Job brief",
     "We are looking for a qualified IT Technician that will install and maintain computer systems and networks aiming for the highest functionality. You will also “train” users of the systems to make appropriate and safe usage of the IT infrastructure.",
     "A successful IT Technician must have a thorough knowledge of computer software and hardware and a variety of internet applications, networks and operating systems. The ideal candidate will also have great troubleshooting abilities and attention to detail.",
-    "The goal is to build and maintain updated and efficient computer systems and networks to optimize the role of technology on business sustainability."
-]
-
-responsibilities = [
+    "The goal is to build and maintain updated and efficient computer systems and networks to optimize the role of technology on business sustainability.",
     "Responsibilities",
     "Set up workstations with computers and necessary peripheral devices (routers, printers etc.)",
     "Check computer hardware (HDD, mouses, keyboards etc.) to ensure functionality",
@@ -16,10 +13,7 @@ responsibilities = [
     "Organize and schedule upgrades and maintenance without deterring others from completing their work",
     "Perform troubleshooting to diagnose and resolve problems (repair or replace parts, debugging etc.)",
     "Maintain records/logs of repairs and fixes and maintenance schedule",
-    "Identify computer or network equipment shortages and place orders"
-]
-
-requirements_and_skills = [
+    "Identify computer or network equipment shortages and place orders",
     "Requirements and skills",
     "Proven experience as IT Technician or relevant position",
     "Excellent diagnostic and problem solving skills",
@@ -29,7 +23,48 @@ requirements_and_skills = [
     "Good knowledge of internet security and data privacy principles",
     "Degree in Computer Science, engineering or relevant field",
     "Certification as IT Technician will be an advantage (e.g. CompTIA A+, Microsoft Certified IT Professional)"
-]
+], [
+    "Job brief",
+    "We are looking for a Video Game Designer to join our team and assist us with designing and developing video games for our customers.",
+    "Video Game Designer responsibilities include managing a team of programmers, developing design and gaming protocols and ensuring the quality of the final product.",
+    "Ultimately, you will work with various departments and teams to help define, produce and publish video games throughout the year for our organization.",
+    "Responsibilities",
+    "Managing multiple teams and projects",
+    "Prototyping new games and updating stakeholders on progress throughout development",
+    "Following industry trends and best practices",
+    "Monitoring work and cash flows",
+    "Developing design and gaming protocols",
+    "Performing quality control to ensure the final product meets organizational standards",
+    "Requirements and skills",
+    "Proven work experience as a Video Game Designer or similar role",
+    "Enthusiasm and knowledge of the industry",
+    "Relevant certification in programming languages",
+    "Portfolio of sample projects",
+    "Relevant training and/or certifications as a Video Game Designer"
+], [
+    "Job brief",
+    "We are looking for a Court Clerk to join our team and perform a range of administrative and clerical duties to maintain our office.",
+    "Court Clerk responsibilities include managing day-to-day tasks such as filing legal documents, entering data and sorting incoming mail as needed.",
+    "Ultimately, you will work with judges and attorneys to ensure they have the administrative support needed to work as efficiently as possible.",
+    "Responsibilities",
+    "Record the minutes of meetings and court proceedings",
+    "Create calendars of cases to be called",
+    "Prepare and distribute court orders, including probation orders, sentencing information and court summonses",
+    "Collect court fines and maintain records of amounts collected",
+    "Ensure all legal documents submitted adhere to the law and court procedures",
+    "Perform basic bookkeeping tasks",
+    "Administer oaths and affirmations",
+    "Requirements and skills",
+    "Proven work experience as a Court Clerk or similar role",
+    "Superior organizational and multitasking abilities",
+    "Good understanding of MS Office programs",
+    "Outstanding communication and interpersonal skills",
+    "Relevant training and/or certifications as a Court Clerk"
+], [
+    "pasdasd fghfg",
+    "zdaadaert erteert"
+]]
 
-# Combine the segments into a single list
-job_description = job_brief + responsibilities + requirements_and_skills
+job_descriptions = []
+# Combine the segments into a string
+job_descriptions += ["  ".join(job_description) for job_description in job_description_list]
