@@ -1,18 +1,21 @@
 import re
 
-def sent_tokenize(document):
+NOISE_SENTENCES = ['n a', 'company name']
+NOISE_WORDS = []
+
+def sent_tokenize(document, noise_sentences=NOISE_SENTENCES, noise_words=NOISE_WORDS):
     # segment sentences when two or more spaces
     segmented_sentences = re.split(r'\s\s+', document)
 
     # lowercasing, year to [TOKEN], numbers to [NUMBER], remove special chars, remove white sapces, remove noise words 
-    cleaned_sentences = _clean_sentences(segmented_sentences)
+    cleaned_sentences = _clean_sentences(segmented_sentences, noise_sentences, noise_words)
 
     # remove single word sentences, remove dates
     filtered_sentences = _filter_sentences(cleaned_sentences)
 
     return filtered_sentences
 
-def _clean_sentences(segmented_sentences):
+def _clean_sentences(segmented_sentences, noise_sentences, noise_words):
     cleaned_sentences = []
 
     for sentence in segmented_sentences:
@@ -30,13 +33,23 @@ def _clean_sentences(segmented_sentences):
         sentence = re.sub(special_characters, ' ', sentence)
         sentence = _remove_special_char(sentence)
 
-        # remove white spaces
-        sentence = ' '.join(sentence.split())
+        # explicit removal of observed noise sentence
+        if (sentence in noise_sentences):
+            sentence = ''
 
         # explicit removal of observed noise words
-        noise_words = ['n a', 'company name']
-        if (sentence in noise_words):
-            sentence = ''
+        pattern = r""
+        for i in range(len(noise_words)):
+            word = noise_words[i]
+            if (i == 0):
+                pattern += rf"{word}"
+            else:
+                pattern += rf"|{word}"
+
+        sentence = re.sub(pattern, '', sentence)
+
+        # remove white spaces
+        sentence = ' '.join(sentence.split())
 
         cleaned_sentences.append(sentence)
     

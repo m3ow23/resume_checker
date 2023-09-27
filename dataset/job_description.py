@@ -1,4 +1,28 @@
 job_description_list = [[
+    'Job Brief',
+    'We are looking for an HR Administrator to support our Human Resources department. You will act as the first point of contact for HR-related queries from employees and external partners.',
+    'Your main administrative duties include maintaining personnel records, managing HR documents (e.g. employment records and onboarding guides) and updating internal databases. Our ideal candidate has experience with HR procedures and can juggle various administrative tasks in a timely manner.',
+    'Ultimately, you should be able to ensure our HR department supports our employees while conforming to labor laws.',
+    'Responsibilities',
+    'Organize and maintain personnel records',
+    'Update internal databases (e.g. record sick or maternity leave)',
+    'Prepare HR documents, like employment contracts and new hire guides',
+    'Revise company policies',
+    'Liaise with external partners, like insurance vendors, and ensure legal compliance',
+    'Create regular reports and presentations on HR metrics (e.g. turnover rates)',
+    'Answer employees queries about HR-related issues',
+    'Assist payroll department by providing relevant employee information (e.g. leaves of absence, sick days and work schedules)',
+    'Arrange travel accommodations and process expense forms',
+    'Participate in HR projects (e.g. help organize a job fair event)',
+    'Requirements and skills',
+    'Proven work experience as an HR Administrator, HR Administrative Assistant or relevant role',
+    'Experience with HR software, like HRIS or HRMS',
+    'Computer literacy (MS Office applications, in particular)',
+    'Thorough knowledge of labor laws',
+    'Excellent organizational skills, with an ability to prioritize important projects',
+    'Strong phone, email and in-person communication skills',
+    'BS in Human Resources or relevant field'
+], [
     "Job brief",
     "We are looking for a qualified IT Technician that will install and maintain computer systems and networks aiming for the highest functionality. You will also “train” users of the systems to make appropriate and safe usage of the IT infrastructure.",
     "A successful IT Technician must have a thorough knowledge of computer software and hardware and a variety of internet applications, networks and operating systems. The ideal candidate will also have great troubleshooting abilities and attention to detail.",
@@ -66,5 +90,5 @@ job_description_list = [[
 ]]
 
 job_descriptions = []
-# Combine the segments into a string
+# Combine the segments into a string divided by two spaces for tokenizer to see
 job_descriptions += ["  ".join(job_description) for job_description in job_description_list]
