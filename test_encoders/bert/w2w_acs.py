@@ -9,6 +9,7 @@ from transformers import BertTokenizer, BertModel
 from scipy.spatial.distance import cosine
 import numpy as np
 import pandas as pd
+from datetime import datetime
 
 import sys
 sys.path.append('.')
@@ -22,7 +23,7 @@ model = BertModel.from_pretrained('bert-base-uncased')
 
 def get_sentence_embeddings(document_sentences):
     # Tokenize and pad/trim sentences
-    tokenized_document = [tokenizer(sentence, padding=True, truncation=True, return_tensors="pt") for sentence in document_sentences]
+    tokenized_document = [tokenizer(sentence, padding=True, truncation=True, return_tensors='pt') for sentence in document_sentences]
     # Compute sentence-level embeddings for each sentence
     document_sentence_embeddings = [model(**tokenized_sentence).last_hidden_state for tokenized_sentence in tokenized_document]
 
@@ -43,13 +44,18 @@ def get_cosine_similarity(document_A_sentence_embeddings, document_B_sentence_em
 
     return np.mean(similarity_scores)
 
-def main(dataset, i, isOdd):
+def main(dataset, i, isOdd=None):
     # check if thread will process proper resume index (even/odd)
     if (isOdd and i % 2 == 0 or not isOdd and i % 2 != 0):
-        i += 1 #increment
-    
+        i += 1 
+        increment = 2
+    else:
+        increment = 1
+        
     while i < dataset.shape[0]:
-        f = open("test_encoders/bert/similarities/w2w_acs.txt", "a")
+        start_time = datetime.now()
+
+        f = open('test_encoders/bert/similarities/w2w_acs.txt', 'a')
 
         resume = dataset['Resume_str'][i]
         tokenized_resume = sent_tokenize(resume, noise_words=noise_words)
@@ -57,18 +63,19 @@ def main(dataset, i, isOdd):
 
         similarity = get_cosine_similarity(resume_sentence_embeddings, job_desc_sentence_embeddings)
 
-        string = str(i) + " " + str(dataset['ID'][i]) + " " + str(dataset['Category'][i]) + " " + str(similarity) + "\n"
+        string = str(i) + ' ' + str(dataset['ID'][i]) + ' ' + str(dataset['Category'][i]) + ' ' + str(similarity) + '\n'
+        thread_number = 'Thread-2: ' if isOdd else 'Thread-1: '
 
-        print(("Thread-2: " if isOdd else "Thread-1: ") + string)
+        print(('' if isOdd == None else thread_number) + string + 'Elapsed Time: ' + str(datetime.now() - start_time) + '\n')
         f.write(string)
         f.close()
 
-        i += 2 #increment
+        i += increment
     
     if (isOdd):
         print('Thread-2 has finished.')
     else:
-        print('Thread-2 has finished.')
+        print('Thread-1 has finished.')
 
 # import dataset 
 dataset = pd.read_csv('dataset/resume_dataset.csv')
@@ -85,16 +92,21 @@ job_desc = sent_tokenize(job_descriptions[0], noise_words=noise_words)
 # get sentence embeddings of job description
 job_desc_sentence_embeddings = get_sentence_embeddings(job_desc)
 
-i = len(open("test_encoders/bert/similarities/w2w_acs.txt", "r").readlines())
+i = len(open('test_encoders/bert/similarities/w2w_acs.txt', 'r').readlines())
 
-# Create two thread objects
-thread1 = threading.Thread(target=main, args=(dataset, i, False))
-thread2 = threading.Thread(target=main, args=(dataset, i, True))
+USE_MULTITHREADING = True
 
-# Start the threads
-thread1.start()
-thread2.start()
+if (USE_MULTITHREADING):
+    # Create two thread objects
+    thread1 = threading.Thread(target=main, args=(dataset, i, False))
+    thread2 = threading.Thread(target=main, args=(dataset, i, True))
 
-# Wait for both threads to finish
-thread1.join()
-thread2.join()
+    # Start the threads
+    thread1.start()
+    thread2.start()
+
+    # Wait for both threads to finish
+    thread1.join()
+    thread2.join()
+else:
+    main(dataset, i)
