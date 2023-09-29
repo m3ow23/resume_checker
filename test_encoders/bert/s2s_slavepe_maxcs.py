@@ -1,7 +1,5 @@
 # Model Used: https://huggingface.co/bert-base-uncased
 
-# UNTESTED
-
 # sentence-to-sentence, sentence-level average pooling embeddings, average cosine similarity
 
 from transformers import BertTokenizer, BertModel
