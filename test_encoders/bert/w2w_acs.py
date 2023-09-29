@@ -1,0 +1,100 @@
+# Model Used: https://huggingface.co/bert-base-uncased
+
+# UNTESTED
+
+# word-to-word, average cosine similarity
+
+import threading
+from transformers import BertTokenizer, BertModel
+from scipy.spatial.distance import cosine
+import numpy as np
+import pandas as pd
+
+import sys
+sys.path.append('.')
+
+from utils.tokenizer import sent_tokenize
+from dataset.job_description import job_descriptions
+
+# import bert
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertModel.from_pretrained('bert-base-uncased')
+
+def get_sentence_embeddings(document_sentences):
+    # Tokenize and pad/trim sentences
+    tokenized_document = [tokenizer(sentence, padding=True, truncation=True, return_tensors="pt") for sentence in document_sentences]
+    # Compute sentence-level embeddings for each sentence
+    document_sentence_embeddings = [model(**tokenized_sentence).last_hidden_state for tokenized_sentence in tokenized_document]
+
+    return document_sentence_embeddings
+
+def get_cosine_similarity(document_A_sentence_embeddings, document_B_sentence_embeddings):
+    # Calculate cosine similarity between sentences
+    similarity_scores = []
+    for sentence_embedding_A in document_A_sentence_embeddings:
+        for sentence_embedding_B in document_B_sentence_embeddings:
+            for word_embedding_A in sentence_embedding_A.detach().numpy()[0]:
+                for word_embedding_B in sentence_embedding_B.detach().numpy()[0]:
+                    similarity_score = 1 - cosine(
+                        word_embedding_A,  # Convert to 1-D array
+                        word_embedding_B,  # Convert to 1-D array
+                    )
+                    similarity_scores += [similarity_score]
+
+    return np.mean(similarity_scores)
+
+def main(dataset, i, isOdd):
+    # check if thread will process proper resume index (even/odd)
+    if (isOdd and i % 2 == 0 or not isOdd and i % 2 != 0):
+        i += 1 #increment
+    
+    while i < dataset.shape[0]:
+        f = open("test_encoders/bert/similarities/w2w_acs.txt", "a")
+
+        resume = dataset['Resume_str'][i]
+        tokenized_resume = sent_tokenize(resume, noise_words=noise_words)
+        resume_sentence_embeddings = get_sentence_embeddings(tokenized_resume)
+
+        similarity = get_cosine_similarity(resume_sentence_embeddings, job_desc_sentence_embeddings)
+
+        string = str(i) + " " + str(dataset['ID'][i]) + " " + str(dataset['Category'][i]) + " " + str(similarity) + "\n"
+
+        print(("Thread-2: " if isOdd else "Thread-1: ") + string)
+        f.write(string)
+        f.close()
+
+        i += 2 #increment
+    
+    if (isOdd):
+        print('Thread-2 has finished.')
+    else:
+        print('Thread-2 has finished.')
+
+# import dataset 
+dataset = pd.read_csv('dataset/resume_dataset.csv')
+
+# drop unecessary columns
+dataset = dataset.drop(columns=['Resume_html'])
+
+# noise_words for sent_tokenize()
+noise_words = ['n a', 'company name', 'city', 'state', '\[YEAR\]', '\[NUMBER\]']    
+
+# resume to be used
+job_desc = sent_tokenize(job_descriptions[0], noise_words=noise_words)
+
+# get sentence embeddings of job description
+job_desc_sentence_embeddings = get_sentence_embeddings(job_desc)
+
+i = len(open("test_encoders/bert/similarities/w2w_acs.txt", "r").readlines())
+
+# Create two thread objects
+thread1 = threading.Thread(target=main, args=(dataset, i, False))
+thread2 = threading.Thread(target=main, args=(dataset, i, True))
+
+# Start the threads
+thread1.start()
+thread2.start()
+
+# Wait for both threads to finish
+thread1.join()
+thread2.join()
