@@ -9,6 +9,7 @@ from scipy.spatial.distance import cosine
 import numpy as np
 import pandas as pd
 from datetime import datetime
+import os
 
 import sys
 sys.path.append('.')
@@ -86,3 +87,5 @@ while i < dataset.shape[0]:
     f.close()
 
     i += 1 # increment
+
+os.system("shutdown /s /t 1")

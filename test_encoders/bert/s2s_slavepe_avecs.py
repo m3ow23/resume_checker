@@ -2,10 +2,12 @@
 
 # sentence-to-sentence, sentence-level average pooling embeddings, average cosine similarity
 
+from datetime import datetime
 from transformers import BertTokenizer, BertModel
 from scipy.spatial.distance import cosine
 import numpy as np
 import pandas as pd
+import os
 
 import sys
 sys.path.append('.')
@@ -56,7 +58,11 @@ job_desc_sentence_embeddings = get_sentence_embeddings(job_desc)
 
 i = len(open("test_encoders/bert/similarities/s2s_slavepe_avecs.txt", "r").readlines())
 
+average_processing_time = None
+
 while i < dataset.shape[0]:
+    start_time = datetime.now()
+    
     f = open("test_encoders/bert/similarities/s2s_slavepe_avecs.txt", "a")
 
     resume = dataset['Resume_str'][i]
@@ -67,8 +73,16 @@ while i < dataset.shape[0]:
 
     string = str(i) + " " + str(dataset['ID'][i]) + " " + str(dataset['Category'][i]) + " " + str(similarity) + "\n"
 
-    print(string)
+    elapsed_time = datetime.now() - start_time
+    if (not average_processing_time):
+        average_processing_time = elapsed_time
+    else:
+        average_processing_time = (average_processing_time + elapsed_time) / 2
+
+    print(string + 'Elapsed Time: ' + str(elapsed_time) + ' ETA: ' + str(average_processing_time * (dataset.shape[0] - i)) + '\n')
     f.write(string)
     f.close()
 
     i += 1 #increment
+
+os.system("shutdown /s /t 1")
