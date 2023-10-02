@@ -19,7 +19,7 @@ from dataset.job_description import job_descriptions
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertModel.from_pretrained('bert-base-uncased')
 
-def get_sentence_embeddings(document_sentences):
+def get_document_embeddings(document_sentences):
     # Tokenize and pad/trim sentences
     tokenized_document = [tokenizer(sentence, padding=True, truncation=True, return_tensors="pt") for sentence in document_sentences]
     # Compute sentence-level embeddings for each sentence
@@ -54,7 +54,7 @@ noise_words = ['n a', 'company name', 'city', 'state', '\[YEAR\]', '\[NUMBER\]']
 job_desc = sent_tokenize(job_descriptions[0], noise_words=noise_words)
 
 # get sentence embeddings of job description
-job_desc_sentence_embeddings = get_sentence_embeddings(job_desc)
+job_desc_sentence_embeddings = get_document_embeddings(job_desc)
 
 i = len(open("test_encoders/bert/similarities/s2s_slavepe_avecs.txt", "r").readlines())
 
@@ -67,7 +67,7 @@ while i < dataset.shape[0]:
 
     resume = dataset['Resume_str'][i]
     tokenized_resume = sent_tokenize(resume, noise_words=noise_words)
-    resume_sentence_embeddings = get_sentence_embeddings(tokenized_resume)
+    resume_sentence_embeddings = get_document_embeddings(tokenized_resume)
 
     similarity = get_cosine_similarity(resume_sentence_embeddings, job_desc_sentence_embeddings)
 
