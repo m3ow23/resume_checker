@@ -1,5 +1,5 @@
 import tensorflow as tf
-from keras.layers import LayerNormalization, MultiHeadAttention, Dense
+from keras.layers import LayerNormalization, MultiHeadAttention, Dense, Dropout, Embedding
 import numpy as np
 
 # encoder Layer
@@ -12,12 +12,13 @@ class Encoder(tf.keras.layers.Layer):
             Dense(dff, activation='relu'),
             Dense(d_model)
         ])
+        self.feed_forward.build((None, d_model))
 
         self.layernorm1 = LayerNormalization(epsilon=1e-6)
         self.layernorm2 = LayerNormalization(epsilon=1e-6)
 
-        self.dropout1 = tf.keras.layers.Dropout(rate)
-        self.dropout2 = tf.keras.layers.Dropout(rate)
+        self.dropout1 = Dropout(rate)
+        self.dropout2 = Dropout(rate)
 
     def call(self, x, training):
         attn_output = self.multihead_attention(x, x, x)
@@ -30,20 +31,20 @@ class Encoder(tf.keras.layers.Layer):
 
         return out2
 
-# Define the Transformer Encoder
+# transformer encoder
 class TransformerEncoder(tf.keras.layers.Layer):
     def __init__(self, num_layers, d_model, num_heads, dff, input_vocab_size, maximum_position_encoding, rate=0.1):
         super(TransformerEncoder, self).__init__()
 
         # input embeddings
         self.d_model = d_model
-        self.embedding = tf.keras.layers.Embedding(input_vocab_size, d_model)
+        self.embedding = Embedding(input_vocab_size, d_model)
         self.pos_encoding = self.positional_encoding(maximum_position_encoding, self.d_model)
 
         # stacking of encoder layer
         self.encoder_layers = [Encoder(d_model, num_heads, dff, rate) for _ in range(num_layers)]
 
-        self.dropout = tf.keras.layers.Dropout(rate)
+        self.dropout = Dropout(rate)
 
     def positional_encoding(self, position, d_model):
         angle_rads = np.arange(position)[:, np.newaxis] / np.power(10000, (2 * (np.arange(d_model)[np.newaxis, :] // 2)) / np.float32(d_model))
@@ -65,18 +66,36 @@ class TransformerEncoder(tf.keras.layers.Layer):
 
         return x
 
-# # Usage example with original Transformer hyperparameters
-# num_layers = 6
-# d_model = 512
-# num_heads = 8
-# dff = 2048
-# input_vocab_size = 10000
-# maximum_position_encoding = 10000
+# transformer encoder with MLM head
+class MLMTransformerEncoder(tf.keras.layers.Layer):
+    def __init__(self, num_layers, d_model, num_heads, dff, input_vocab_size, maximum_position_encoding , rate=0.1):
+        super(MLMTransformerEncoder, self).__init__()
 
-# model = TransformerEncoder(num_layers, d_model, num_heads, dff, input_vocab_size, maximum_position_encoding)
+        self.transformer_encoder = TransformerEncoder(num_layers, d_model, num_heads, dff, input_vocab_size, maximum_position_encoding)
 
-# # Pass some input through the encoder
-# input = tf.random.uniform((64, 40), dtype=tf.int64, minval=0, maxval=10000)
-# print(input)
-# output = model(input, training=False)
-# print(output.shape)
+        self.mlm_head = Dense(input_vocab_size, activation='softmax')
+        self.mlm_head.build(input_shape=(None, d_model))
+
+        self.dropout = Dropout(rate)
+
+    def call(self, input: [tf, tf], training):
+        x, mask = input
+
+        # apply mask
+        x = x * mask
+
+        x = self.transformer_encoder(x, training)
+
+        mask = tf.expand_dims(mask, axis=-1)
+
+        # apply mask
+        x = x + mask * tf.constant(-1e9, dtype=tf.float32)
+
+        x = self.mlm_head(x)
+
+        x = self.dropout(x, training=training)
+
+        return x
+
+    def remove_mlm_head(self):
+        return self.transformer_encoder
