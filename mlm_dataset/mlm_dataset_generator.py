@@ -87,14 +87,15 @@ class MLMDatasetGenerator:
             tokens = sentence.split(' ')
 
             # get 15% of indices within the sentence to mask
-            random_indices = sorted([random.randint(0, len(tokens) - 1) for _ in range(math.ceil((len(tokens) * .15)))])
+            random_indices = sorted(random.sample(range(len(tokens)), math.ceil(len(tokens) * 0.15)))
 
             tokens_batch.append(tokens)
 
             labels = []
+            inputs = list(tokens)
             # change the words in the indices to the token [MASK]
             for index in random_indices:
-                labels.append(tokens[index])
+                labels.append(inputs[index])
                 tokens[index] = '[MASK]'
             labels_batch.append(labels)
             

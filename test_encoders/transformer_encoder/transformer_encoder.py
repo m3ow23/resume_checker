@@ -68,7 +68,7 @@ class TransformerEncoder(tf.keras.layers.Layer):
 
 # transformer encoder with MLM head
 class MLMTransformerEncoder(tf.keras.layers.Layer):
-    def __init__(self, num_layers, d_model, num_heads, dff, input_vocab_size, maximum_position_encoding , rate=0.1):
+    def __init__(self, num_layers, d_model, num_heads, dff, input_vocab_size, maximum_position_encoding, rate=0.1):
         super(MLMTransformerEncoder, self).__init__()
 
         self.transformer_encoder = TransformerEncoder(num_layers, d_model, num_heads, dff, input_vocab_size, maximum_position_encoding)
@@ -78,24 +78,24 @@ class MLMTransformerEncoder(tf.keras.layers.Layer):
 
         self.dropout = Dropout(rate)
 
-    def call(self, input: [tf, tf], training):
-        x, mask = input
+    def call(self, inputs, training):
+        x, mask = inputs
 
-        # apply mask
-        x = x * mask
+        # Apply mask
+        masked_x = x * mask
 
-        x = self.transformer_encoder(x, training)
+        transformer_output = self.transformer_encoder(masked_x, training)
 
         mask = tf.expand_dims(mask, axis=-1)
 
-        # apply mask
-        x = x + mask * tf.constant(-1e9, dtype=tf.float32)
+        # Apply mask
+        masked_output = transformer_output + mask * tf.constant(-1e9, dtype=tf.float32)
 
-        x = self.mlm_head(x)
+        mlm_predictions = self.mlm_head(masked_output)
 
-        x = self.dropout(x, training=training)
+        mlm_predictions = self.dropout(mlm_predictions, training=training)
 
-        return x
+        return mlm_predictions
 
     def remove_mlm_head(self):
         return self.transformer_encoder
