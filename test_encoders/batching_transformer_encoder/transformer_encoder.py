@@ -79,44 +79,24 @@ class MLMTransformerEncoder(tf.keras.layers.Layer):
         self.dropout = Dropout(rate)
 
     def call(self, inputs, training):
-        padded_tokenized_tokens_batch, attention_mask, mlm_mask = inputs
+        x, attention_mask, mlm_mask = inputs
 
         # Apply mask
-        masked_x = tf.multiply(padded_tokenized_tokens_batch, attention_mask)
+        x = tf.multiply(x, attention_mask)
 
-        # if (not build):
-        #     print('pre-transformer encoder: ' + str(masked_x.shape))
+        x = self.transformer_encoder(x, training)
 
-        transformer_output = self.transformer_encoder(masked_x, training)
-
-        # if (not build):
-        #     print('post-transformer encoder: ' + str(transformer_output.shape))
-
-        mlm_predictions = self.mlm_head(transformer_output)
-
-        # if (not build):
-        #     print('post-mlm head: ' + str(mlm_predictions.shape))
+        x = self.mlm_head(x)
 
         # Apply reversed mask
-        masked_mlm_predictions = tf.multiply(mlm_predictions, mlm_mask)
+        x = tf.multiply(x, mlm_mask)
 
-        # if (not build):
-        #     print('post-reversed mask: ' + str(masked_mlm_predictions.shape))
-
-        # PROBLEM!!!
-        # causes tape to loss track of variables
         # substitue zeroes with epsilon(1e-8)
-        subbed_masked_mlm_predictions = tf.where(tf.equal(masked_mlm_predictions, 0), 1e-8, masked_mlm_predictions)
+        x = tf.where(tf.equal(x, 0), 1e-8, x)
 
-        # if (not build):
-        #     print('post-subbing of zeroes to epsilon: ' + str(masked_mlm_predictions.shape))
+        x = self.dropout(x, training=training)
 
-        subbed_masked_mlm_predictions = self.dropout(subbed_masked_mlm_predictions, training=training)
-
-        # if (not build):
-        #     print('post-dropout: ' + str(masked_mlm_predictions.shape))
-
-        return subbed_masked_mlm_predictions
+        return x
 
     def remove_mlm_head(self):
         return self.transformer_encoder
