@@ -78,25 +78,47 @@ class MLMTransformerEncoder(tf.keras.layers.Layer):
 
         self.dropout = Dropout(rate)
 
-    def call(self, inputs, training):
-        x, mask = inputs
+    def call(self, inputs, training, build=False):
+        x, attention_mask, mlm_mask = inputs
+
+        # if (not build):
+        #     print('pre-attention_mask: ' + str(x.shape))
 
         # Apply mask
-        masked_x = x * mask
+        masked_x = tf.math.multiply(x, attention_mask)
+
+        # if (not build):
+        #     print('pre-transformer encoder: ' + str(masked_x.shape))
 
         transformer_output = self.transformer_encoder(masked_x, training)
 
+        # if (not build):
+        #     print('post-transformer encoder: ' + str(transformer_output.shape))
+
         mlm_predictions = self.mlm_head(transformer_output)
 
-        # reverse mask to zero-out non-masked tokens
-        mask = 1 - tf.expand_dims(mask, axis=-1)
+        # if (not build):
+        #     print('post-mlm head: ' + str(mlm_predictions.shape))
+
+        # PROBLEM!!!
+        # this reverse mask also sets the padding attentions to 1 which should stay 0
+
         # Apply reversed mask
-        masked_mlm_predictions = mlm_predictions * mask
-        # print(masked_mlm_predictions)
+        masked_mlm_predictions = mlm_predictions * mlm_mask
+
+        # if (not build):
+        #     print('post-reversed mask: ' + str(masked_mlm_predictions.shape))
+
         # substitue zeroes with epsilon(1e-8)
         masked_mlm_predictions = tf.where(masked_mlm_predictions == 0, 1e-8, masked_mlm_predictions)
 
+        # if (not build):
+        #     print('post-subbing of zeroes to epsilon: ' + str(masked_mlm_predictions.shape))
+
         masked_mlm_predictions = self.dropout(masked_mlm_predictions, training=training)
+
+        # if (not build):
+        #     print('post-dropout: ' + str(masked_mlm_predictions.shape))
 
         return masked_mlm_predictions
 

@@ -2,6 +2,8 @@ import pandas as pd
 import re
 import random
 import math
+import tensorflow as tf
+import numpy as np
 
 class MLMDatasetGenerator:
     def __init__(self, datasetPath) -> None:
@@ -74,30 +76,29 @@ class MLMDatasetGenerator:
 
         self.preprocessedDataset = sentence_dataset
         
-    def generateMLMDataset(self, batch_size) -> [tuple]:
-        sentence_dataset = self.preprocessedDataset
+    def generateMLMDataset(self, batch_size, sample_limit=None) -> ([], [], []):
+        if (sample_limit):
+            sentence_dataset = self.preprocessedDataset[:sample_limit]
+        else:
+            sentence_dataset = self.preprocessedDataset
 
         mlm_dataset = []
-        batch = []
         tokens_batch = []
         labels_batch = []
         counter = 0
         # create tuple of sentence with masked tokens and the labels of the masked tokens
         for sentence in sentence_dataset:
-            tokens = sentence.split(' ')
+            tokens = np.array(sentence.split(' '))
 
             # get 15% of indices within the sentence to mask
-            random_indices = sorted(random.sample(range(len(tokens)), math.ceil(len(tokens) * 0.15)))
+            random_indices = tf.constant(sorted(random.sample(range(len(tokens)), math.ceil(len(tokens) * 0.15))))
 
-            tokens_batch.append(tokens)
-
-            labels = []
-            inputs = list(tokens)
-            # change the words in the indices to the token [MASK]
-            for index in random_indices:
-                labels.append(inputs[index])
-                tokens[index] = '[MASK]'
-            labels_batch.append(labels)
+            # labels
+            labels = list(tokens[random_indices])
+            labels_batch += labels
+            # change masked token indices to [MASK] token
+            tokens[random_indices] = '[MASK]'
+            tokens_batch.append(tokens.tolist())
             
             counter += 1
             if (counter >= batch_size):
@@ -106,10 +107,9 @@ class MLMDatasetGenerator:
                 # create new batch
                 tokens_batch = []
                 labels_batch = []
-                batch = [] 
                 counter = 0
 
         return mlm_dataset
     
     def getVocubulary(self):
-        return [['[MASK]'], ['[NUMBER]']] + self.preprocessedDataset
+        return ['[MASK] [NUMBER]'] + self.preprocessedDataset
