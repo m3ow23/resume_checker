@@ -1,0 +1,5 @@
+batch_size = 32: 35 hours per epoch
+batch_size = 5: 17 hours per epoch
+batch_size = 8: 14 hours per epoch
+batch_size = 16: 14 hours per epoch
+batch_size = 12: 13 hours per epoch
