@@ -140,18 +140,20 @@ class MLMDatasetGenerator:
         mlm_dataset = []
         # create tuple of sentence with masked tokens and the labels of the masked tokens
         for sentence in data:
-            tokens = np.array(sentence.split(' '))
+            tokens = sentence.split(' ')
 
             # get 15% of indices within the sentence to mask
-            random_indices = tf.constant(sorted(random.sample(range(len(tokens)), math.ceil(len(tokens) * 0.15))))
+            random_indices = sorted(random.sample(range(len(tokens)), math.ceil(len(tokens) * 0.15)))
 
             # labels
-            labels = tokens[random_indices]
+            labels = []
             # change masked token indices to [MASK] token
-            tokens[random_indices] = '[MASK]'
+            for index in random_indices:
+                labels.append(tokens[index])
+                tokens[index] = "[mask]"
 
-            mlm_dataset.append(tokens.tolist())
-            mlm_dataset.append(labels.tolist())
+            mlm_dataset.append(tokens)
+            mlm_dataset.append(labels)
 
         return mlm_dataset
         

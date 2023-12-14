@@ -64,7 +64,8 @@ class ReLu(Activation):
 class Softmax(Activation):
     @staticmethod
     def forward(Z):
-        exp = np.exp(Z)
+        # exp = np.exp(Z)
+        exp = np.exp(Z - np.max(Z))
         return exp / exp.sum(0)
 
     @staticmethod

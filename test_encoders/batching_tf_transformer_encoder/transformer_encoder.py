@@ -2,12 +2,14 @@ import tensorflow as tf
 from keras.layers import LayerNormalization, MultiHeadAttention, Dense, Dropout, Embedding
 import numpy as np
 
+import time
+
 # encoder Layer
 class Encoder(tf.keras.layers.Layer):
     def __init__(self, d_model, num_heads, dff, rate=0.1):
         super(Encoder, self).__init__()
 
-        self.multihead_attention = MultiHeadAttention(key_dim=d_model, num_heads=num_heads)
+        self.multihead_attention = MultiHeadAttention(key_dim=d_model//num_heads, num_heads=num_heads)
         self.feed_forward = tf.keras.Sequential([
             Dense(dff, activation='relu'),
             Dense(d_model)
@@ -21,13 +23,30 @@ class Encoder(tf.keras.layers.Layer):
         self.dropout2 = Dropout(rate)
 
     def call(self, x, training, attention_mask):
+        start_time = time.time()
+
         attn_output = self.multihead_attention(x, x, x, attention_mask=attention_mask)
+
+        print('mha:', time.time() - start_time)
+        start_time = time.time()
+
         attn_output = self.dropout1(attn_output, training=training)
         out1 = self.layernorm1(x + attn_output)
 
+        print('add & norm:', time.time() - start_time)
+        start_time = time.time()
+
         ff_output = self.feed_forward(out1)
+
+        print('ffn:', time.time() - start_time)
+        start_time = time.time()
+
+
         ff_output = self.dropout2(ff_output, training=training)
         out2 = self.layernorm2(out1 + ff_output)
+
+        print('add & norm:', time.time() - start_time)
+        start_time = time.time()
 
         return out2
 
@@ -54,10 +73,23 @@ class TransformerEncoder(tf.keras.layers.Layer):
         return tf.cast(pos_encoding, dtype=tf.float32)
 
     def call(self, x, training, attention_mask):
-        seq_len = tf.shape(x)[1]
+        start_time = time.time()
+
         x = self.embedding(x)
+
+        print('word_embedding:', time.time() - start_time)
+        start_time = time.time()
+
+        # In Vaswani's paper they applied this
         x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
-        x += self.pos_encoding[:, :seq_len, :]
+
+        print('sqrt:', time.time() - start_time)
+        start_time = time.time()
+
+        x += self.pos_encoding
+
+        print('pos_encoding:', time.time() - start_time)
+        start_time = time.time()
 
         x = self.dropout(x, training=training)
 
@@ -83,7 +115,12 @@ class MLMTransformerEncoder(tf.keras.layers.Layer):
 
         x = self.transformer_encoder(x, training, attention_mask)
 
+        start_time = time.time()
+
         x = self.mlm_head(x)
+
+        print('mlm_head:', time.time() - start_time)
+        start_time = time.time()
 
         x = self.dropout(x, training=training)
         

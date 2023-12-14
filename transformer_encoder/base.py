@@ -44,7 +44,7 @@ class Sequential:
         Y = Y.T
 
         for layer in self.layers:
-            layer.set_optimizer(optimizer)  # set each layer optimizers
+            layer.set_optimizer(optimizer=optimizer)  # set each layer optimizers
 
         Y_hat = X
         prev_Y_hat = None
@@ -120,11 +120,12 @@ class Sequential:
         return np.mean(outputs, axis=0)
 
     def validate(self,
-                 X: Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]],
+                 X: NDArray[np.float64],
+                 attention_mask: NDArray[np.float64],
+                 mlm_mask: NDArray[np.float64],
                  Y: NDArray[np.float64],
-                 loss_function: Loss):
-        X, attention_mask, mlm_mask = X
-
+                 loss_function: Loss,
+                 accuracy_metric: Callable[[NDArray[np.float64], NDArray[np.float64]], NDArray[np.float64]] = None):
         V, V_hat = Y.T, X.T
         prev_V_hat = None
         layer_count = len(self.layers)  # get number of layers
@@ -136,7 +137,7 @@ class Sequential:
                 # store V_hat before FFN
                 if (type(self.layers[index + 1]) is Dense and
                     type(self.layers[index + 2]) is LayerNormalization):
-                    prev_V_hat = V
+                    prev_V_hat = V_hat
 
             if (type(layer) == MultiHeadAttention or
                 type(layer) == SelfAttention):
@@ -151,7 +152,7 @@ class Sequential:
         mlm_masked_V_hat = V_hat * mlm_mask.T
         mlm_masked_V_hat[mlm_masked_V_hat == 0] = 10**-100
 
-        return loss_function.forward(V, mlm_masked_V_hat)
+        return loss_function.forward(V, mlm_masked_V_hat), accuracy_metric(V, V_hat)
 
     # def fit_predict(self,
     #                 X: NDArray[np.float64],

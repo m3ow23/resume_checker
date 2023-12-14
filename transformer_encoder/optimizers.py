@@ -39,7 +39,7 @@ class Optimizer(abc.ABC):
 
 
 class GradientDescent(Optimizer):
-    def __init__(self, alpha=0.1):
+    def __init__(self, alpha=0.01):
         self.alpha = alpha
 
     def get_optimizer(self, size):
