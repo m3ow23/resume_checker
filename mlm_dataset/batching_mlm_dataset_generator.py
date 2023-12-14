@@ -156,7 +156,8 @@ class MLMDatasetGenerator:
         testing_data = []
 
         batch_size *= 2
-        sample_limit *= 2
+        if sample_limit is not None:
+            sample_limit *= 2
 
         with open('training_data.txt', 'r') as file:
             if sample_limit is not None:
@@ -168,7 +169,7 @@ class MLMDatasetGenerator:
                 batch = []
                 for line in lines[i:i + batch_size]:
                     batch.append(line.strip().split(' '))
-            training_data.append(batch)
+                training_data.append(batch)
         
         with open('validation_data.txt', 'r') as file:
             if sample_limit is not None:
@@ -180,7 +181,7 @@ class MLMDatasetGenerator:
                 batch = []
                 for line in lines[i:i + batch_size]:
                     batch.append(line.strip().split(' '))
-            validation_data.append(batch)
+                validation_data.append(batch)
 
         with open('testing_data.txt', 'r') as file:
             if sample_limit is not None:
@@ -192,7 +193,7 @@ class MLMDatasetGenerator:
                 batch = []
                 for line in lines[i:i + batch_size]:
                     batch.append(line.strip().split(' '))
-            testing_data.append(batch)
+                testing_data.append(batch)
 
         return (training_data, validation_data, testing_data)
 
